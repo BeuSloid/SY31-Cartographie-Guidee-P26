@@ -1,0 +1,9 @@
+[console_scripts]
+arrow_clusterer = projet.arrow_clusterer:main
+arrow_detector = projet.arrow_detector:main
+cluster = projet.clusterer:main
+inten = projet.intensity_filter:main
+map_transformer = projet.map_transformer:main
+odom_node = projet.odom_node:main
+tf_publisher = projet.tf_publisher:main
+trans = projet.transformer:main

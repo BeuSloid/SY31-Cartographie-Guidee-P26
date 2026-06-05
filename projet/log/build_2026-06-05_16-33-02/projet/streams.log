@@ -1,0 +1,28 @@
+[0.978s] Invoking command in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/projet build --build-base /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/build install --record /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/install.log --single-version-externally-managed install_data
+[1.296s] running egg_info
+[1.321s] writing build/projet/projet.egg-info/PKG-INFO
+[1.321s] writing dependency_links to build/projet/projet.egg-info/dependency_links.txt
+[1.321s] writing entry points to build/projet/projet.egg-info/entry_points.txt
+[1.322s] writing requirements to build/projet/projet.egg-info/requires.txt
+[1.322s] writing top-level names to build/projet/projet.egg-info/top_level.txt
+[1.370s] reading manifest file 'build/projet/projet.egg-info/SOURCES.txt'
+[1.371s] writing manifest file 'build/projet/projet.egg-info/SOURCES.txt'
+[1.372s] running build
+[1.372s] running build_py
+[1.372s] running install
+[1.379s] running install_lib
+[1.404s] running install_data
+[1.404s] running install_egg_info
+[1.431s] removing '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages/projet-0.0.0-py3.12.egg-info' (and everything under it)
+[1.431s] Copying build/projet/projet.egg-info to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages/projet-0.0.0-py3.12.egg-info
+[1.432s] running install_scripts
+[1.592s] Installing arrow_clusterer script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.592s] Installing arrow_detector script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.592s] Installing cluster script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.592s] Installing inten script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.592s] Installing map_transformer script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.593s] Installing odom_node script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.593s] Installing tf_publisher script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.593s] Installing trans script to /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/projet
+[1.593s] writing list of installed files to '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/install.log'
+[1.635s] Invoked command in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/projet build --build-base /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/build install --record /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/install.log --single-version-externally-managed install_data
