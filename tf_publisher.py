@@ -42,3 +42,23 @@ def main(args=None):
         rclpy.spin(TfPublisher())
     except KeyboardInterrupt:
         pass
+
+
+"""Le nœud tf_publisher assure la liaison entre notre odométrie maison et le système de 
+transformations (TF) de ROS, indispensable pour qu'RViz affiche correctement les données. 
+Le LiDAR exprime ses points dans le repère base_scan, solidaire du robot ; pour les visualiser 
+dans le repère monde odom, RViz a besoin de connaître à chaque instant la position de base_scan 
+relativement à odom. À chaque pose reçue sur /robot_pose, le nœud construit donc une transformation 
+odom → base_scan dont la translation reprend la position (x, y) du robot et la hauteur du LiDAR, 
+et dont la rotation reprend directement l'orientation du robot, puis la diffuse via un 
+TransformBroadcaster. Nous avons isolé cette tâche dans un nœud dédié, à responsabilité unique, 
+plutôt que de la mêler au calcul d'odométrie, afin de garder une architecture claire où chaque nœud
+ a un rôle bien délimité.
+Pour ce nœud, la difficulté n'était pas algorithmique mais relevait de la mécanique propre 
+à tf2_ros dans ROS 2. Nous avons sollicité l'IA uniquement pour la syntaxe de construction et 
+de diffusion d'un TransformStamped (remplissage des champs header.frame_id, child_frame_id, et
+ emploi du TransformBroadcaster), points purement techniques que nous avons ensuite vérifiés dans 
+ la documentation. Le choix d'architecture — réutiliser notre pose /robot_pose comme source unique 
+ de la TF plutôt que de dépendre d'une odométrie externe — découle de notre volonté de cohérence 
+ avec le reste de la chaîne, où la même pose alimente la cartographie et la localisation des 
+ flèches."""

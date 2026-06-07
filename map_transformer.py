@@ -4,75 +4,95 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan, PointCloud2
+from std_msgs.msg import Header
 from transforms3d.euler import quat2euler
 from geometry_msgs.msg import PoseStamped
 
 from .utils import make_pointcloud2
 
+
 class MapTransformer(Node):
     def __init__(self):
         super().__init__("map_transformer")
 
-        # Souscription au LiDAR et à l'odométrie officielle du bag
         self.sub_scan = self.create_subscription(LaserScan, "scan", self.scan_callback, 10)
-        self.sub_pose = self.create_subscription(PoseStamped, "/robot_pose", self.pose_callback, 10)  
-
-        # Topic de sortie pour RViz (les points fixes dans le labyrinthe)
+        self.sub_pose = self.create_subscription(PoseStamped, "/robot_pose", self.pose_callback, 10)
         self.pub = self.create_publisher(PointCloud2, "global_points", 10)
 
-        # Variables pour stocker la position actuelle du robot
+        # Pose courante du robot
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.angle_robot = 0.0
 
+        # Distances LiDAR a garder (m)
+        self.dist_min = 0.10
+        self.dist_max = 3.5
+
+        # Carte accumulee
+        self.acc_x = []
+        self.acc_y = []
+        self.acc_i = []
+        self._last_stamp = None
+
+        # On republie toute la carte une fois par seconde
+        self.create_timer(1.0, self.publish_map)
+        self.has_pose = False
+
     def pose_callback(self, msg: PoseStamped):
-        """On récupère la position X, Y et l'angle du robot venant de l'odométrie."""
-        self.robot_x = msg.pose.position.x        # un seul .pose
+        self.robot_x = msg.pose.position.x
         self.robot_y = msg.pose.position.y
-        
-        # Conversion du format quaternion vers un angle simple (lacet)
-        quaternion = msg.pose.orientation
-        _, _, self.angle_robot = quat2euler([quaternion.w, quaternion.x, quaternion.y, quaternion.z])
+        q = msg.pose.orientation
+        _, _, self.angle_robot = quat2euler([q.w, q.x, q.y, q.z])
+        self.has_pose = True
 
     def scan_callback(self, msg: LaserScan):
-        """Traitement de chaque balayage laser pour le mettre dans la carte."""
-        points_x = []
-        points_y = []
-        intensites = []
+        if not self.has_pose:
+            return
+        # 1. Angles et distances en tableaux NumPy
+        ranges = np.array(msg.ranges)
+        n = len(ranges)
+        angles = msg.angle_min + np.arange(n) * msg.angle_increment
 
-        # On parcourt chaque rayon du LiDAR (Logique du TP 4)
-        for i, angle_balayage in enumerate(np.arange(msg.angle_min, msg.angle_max, msg.angle_increment)):
-            dist = msg.ranges[i]
+        # 2. On garde les distances valides (pas de inf/nan, ni trop proche/loin)
+        ok = np.isfinite(ranges) & (ranges > self.dist_min) & (ranges < self.dist_max)
+        ranges = ranges[ok]
+        angles = angles[ok]
+        if len(ranges) == 0:
+            return
 
-            # --- FILTRAGE (Inspiré du fichier de mon ami) ---
-            # On ignore les points trop proches (le châssis) ou trop loin (bruit)
-            if dist < 0.10 or dist > 3.5:
-                continue
+        # 3. Polaire -> cartesien (repere robot)
+        x_local = ranges * np.cos(angles)
+        y_local = ranges * np.sin(angles)
 
-            # 1. Passage en coordonnées cartésiennes LOCALES (repère robot)
-            x_robot = dist * np.cos(angle_balayage)
-            y_robot = dist * np.sin(angle_balayage)
+        # 4. Rotation (angle robot) + translation (position robot) -> repere odom
+        cos_t = np.cos(self.angle_robot)
+        sin_t = np.sin(self.angle_robot)
+        x_global = x_local * cos_t - y_local * sin_t + self.robot_x
+        y_global = x_local * sin_t + y_local * cos_t + self.robot_y
 
-            # 2. Application de la rotation (selon l'angle du gyroscope)
-            # On utilise le gyro ici car les roues patinent dans le labyrinthe
-            x_tourne = x_robot * np.cos(self.angle_robot) - y_robot * np.sin(self.angle_robot)
-            y_tourne = x_robot * np.sin(self.angle_robot) + y_robot * np.cos(self.angle_robot)
+        intens = np.array(msg.intensities)[ok] if len(msg.intensities) == n else np.zeros(len(ranges))
 
-            # 3. Application de la translation (décalage du robot)
-            x_final = x_tourne + self.robot_x
-            y_final = y_tourne + self.robot_y
+        # 5. Reset de la carte si le bag a reboucle (temps qui repart en arriere)
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
+        if self._last_stamp is not None and stamp < self._last_stamp:
+            self.acc_x.clear()
+            self.acc_y.clear()
+            self.acc_i.clear()
+        self._last_stamp = stamp
 
-            # Ajout aux listes pour le message final
-            points_x.append(x_final)
-            points_y.append(y_final)
-            intensites.append(msg.intensities[i])
+        # 6. Accumulation
+        self.acc_x.extend(x_global[::2])
+        self.acc_y.extend(y_global[::2])
+        self.acc_i.extend(intens[::2])
 
-        # Si on a trouvé des points, on les publie
-        if len(points_x) > 0:
-            # On change le frame_id en 'odom' pour que RViz comprenne que c'est du global
-            msg.header.frame_id = "odom"
-            nuage_points = make_pointcloud2(msg.header, points_x, points_y, intensites)
-            self.pub.publish(nuage_points)
+    def publish_map(self):
+        if not self.acc_x:
+            return
+        header = Header()
+        header.frame_id = "odom"
+        header.stamp = self.get_clock().now().to_msg()
+        self.pub.publish(make_pointcloud2(header, self.acc_x, self.acc_y, self.acc_i))
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -82,40 +102,38 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     rclpy.shutdown()
-    
-    
-    
-    
-"""
-ANALYSE TECHNIQUE DU FONCTIONNEMENT - ÉTAPE B DU PROJET
 
-Ce nœud assure le passage des données brutes du LiDAR (mesurées en local) vers 
-le repère global 'odom' du labyrinthe. Voici la logique détaillée :
-
-1. FILTRAGE DES DONNÉES :
-   Nous avons défini une plage de confiance entre 0.10m et 0.65m. 
-   Le seuil bas élimine les reflets sur le propre châssis du robot, tandis que 
-   le seuil haut permet d'ignorer les mesures instables en fond de labyrinthe.
-
-2. TRANSFORMATION GÉOMÉTRIQUE (POLAIRE VERS CARTÉSIEN) :
-   En reprenant la structure du TP #4, chaque rayon LiDAR est d'abord converti 
-   en coordonnées (x,y) relatives au robot. 
-   On utilise les formules trigonométriques classiques : x = r * cos(angle) 
-   et y = r * sin(angle).
-
-3. CHANGEMENT DE REPÈRE (ROBOT -> MAP) :
-   C'est l'étape cruciale pour la cartographie. Pour chaque point, nous appliquons 
-   deux transformations successives basées sur la pose robuste calculée dans odom_node :
-   - LA ROTATION : On fait pivoter les points locaux selon l'angle 'angle_robot' 
-     calculé par le gyroscope. Nous avons privilégié le 
-     gyroscope car les encodeurs des roues sont sujets au patinage lors des 
-     virages serrés du labyrinthe.
-   - LA TRANSLATION : On décale ensuite ces points tournés par les coordonnées 
-     X et Y du robot pour les situer dans le repère global.
-
-4. PUBLICATION ET VISUALISATION :
-   Le changement du 'frame_id' de 'base_scan' vers 'odom' est indispensable. 
-   Il indique à RViz que ces points ne sont plus attachés au robot mais sont 
-   des éléments fixes du décor. Cela permet de voir les 
-   murs se dessiner de façon stable même lorsque le robot est en mouvement.
-"""
+"""Une fois la pose du robot reconstruite, le rôle du nœud de cartographie est de replacer chaque
+ point mesuré par le LiDAR dans un repère fixe afin de dessiner progressivement le labyrinthe. 
+ À chaque balayage, les distances renvoyées par le capteur sont d'abord converties de coordonnées 
+ polaires en coordonnées cartésiennes dans le repère propre du robot, selon les formules classiques 
+ x = r·cos(α) et y = r·sin(α), où α est l'angle de chaque rayon. Ces points, encore exprimés 
+ relativement au robot, sont ensuite transformés vers le repère global odom par une rotation 
+ suivie d'une translation : la rotation utilise l'angle θ issu du gyromètre, et la translation 
+ utilise la position (x, y) du robot. Cette opération correspond exactement à l'équation de 
+ changement de repère fournie dans l'énoncé, où la matrice homogène 3×3 combine en une seule 
+ étape la rotation et la translation appliquées à l'ensemble des points d'un scan.
+Le choix d'utiliser l'angle du gyromètre plutôt qu'une orientation déduite des roues découle 
+directement de la logique adoptée pour l'odométrie : dans les virages serrés, le patinage fausse 
+toute estimation d'angle basée sur les encodeurs, alors que le gyromètre mesure la rotation réelle 
+du châssis. Réutiliser cette orientation fiable pour la cartographie garantit que les murs se 
+positionnent correctement même lorsque le robot tourne. Avant transformation, les mesures sont
+ filtrées : les points trop proches (reflets sur le châssis) et les valeurs aberrantes ou infinies 
+ (rayons ne touchant aucun obstacle) sont écartés, ce qui évite de polluer la carte. Contrairement 
+ à un simple affichage scan par scan, où chaque balayage effacerait le précédent, nous accumulons 
+ l'ensemble des points déjà observés et republions périodiquement la carte complète. C'est cette 
+ accumulation, rendue possible par la connaissance de la pose à chaque instant, qui permet de voir
+   le tracé du labyrinthe se construire au fil du parcours. Lorsque le fichier bag reboucle, 
+   la détection d'un retour en arrière de l'horodatage réinitialise la carte pour éviter la 
+   superposition de deux tours décalés.
+Pour ce nœud, la logique géométrique (conversion polaire-cartésien, puis rotation et translation 
+vers le repère global) provient directement des TP, notamment du TP de transformation LiDAR. 
+L'IA n'a été sollicitée que sur des aspects syntaxiques de rclpy : la structure du nœud avec 
+son abonnement au scan et à la pose, la construction du message PointCloud2 via les utilitaires 
+fournis, et la vectorisation des calculs sous NumPy pour traiter tout un balayage d'un coup
+ plutôt que rayon par rayon. Nous avons par ailleurs corrigé plusieurs points de la version 
+ initiale. Celle-ci ne faisait qu'afficher le scan courant sans rien accumuler : nous avons 
+ ajouté la mémoire des points et la republication périodique. Le filtrage des valeurs infinies,
+   absent au départ, a été ajouté pour fiabiliser la carte. Enfin, nous avons ajusté le seuil 
+   de distance maximale en fonction de la taille réelle du labyrinthe, après avoir constaté que
+   des façades lointaines disparaissaient lorsque ce seuil était trop bas."""

@@ -7,133 +7,178 @@ from sensor_msgs.msg import Imu
 from turtlebot3_msgs.msg import SensorState
 from geometry_msgs.msg import PoseStamped
 from transforms3d.euler import euler2quat
-from builtin_interfaces.msg import Time
+
 
 class OdomNode(Node):
+    """Calcule la pose (x, y, theta) du robot par integration.
+
+    On decouple les deux capteurs selon ce qu'ils mesurent le mieux :
+      - theta : integre depuis la vitesse angulaire du gyroscope (IMU)
+      - distance : depuis les encodeurs de roues
+    On evite ainsi d'estimer l'angle par les roues, qui patinent dans
+    les virages serres du labyrinthe.
     """
-    Nœud d'odométrie robuste fusionnant l'IMU (angle) et les encodeurs (distance).
-    C'est le fichier 'cerveau' qui permet de situer le robot dans le labyrinthe.
-    """
-    # Caractéristiques physiques du Turtlebot3
-    TICKS_PER_REV = 4096      # Résolution des encodeurs
-    RAYON_ROUE = 0.033        # En mètres
-    
+
+    # Caracteristiques du Turtlebot3
+    TICKS_PER_REV = 4096      # ticks par tour de roue
+    RAYON_ROUE = 0.033        # rayon de la roue (m)
+
     def __init__(self):
         super().__init__("odom_node")
 
-        # --- Variables d'état (La Pose du robot) ---
-        self.x = 0.0          # Position X dans le repère global (m)
-        self.y = 0.0          # Position Y dans le repère global (m)
-        self.theta = 0.0      # Orientation (rad) extraite du Gyroscope
+        # Pose du robot dans le repere global
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
 
-        # Mémoire pour le calcul des deltas
-        # None = pas encore reçu de message ; évite le faux saut au premier message
-        self.last_left_ticks = None
-        self.last_right_ticks = None
-        self.v_lineaire = 0.0
+        # Horodatages du dernier message recu (pour calculer dt et detecter le rebouclage)
+        self.t_gyro = None
+        self.t_enco = None
 
-        # --- Communication ROS 2 ---
-        # On publie la pose fusionnée sur /robot_pose pour le map_transformer
+        # Position precedente des encodeurs (en ticks)
+        # None = pas encore recu de message ; evite le faux saut au premier message
+        self.last_left = None
+        self.last_right = None
+
+        # Publisher : pose du robot
         self.pose_pub = self.create_publisher(PoseStamped, "/robot_pose", 10)
 
-        # On s'abonne aux capteurs bruts du robot
-        self.imu_sub = self.create_subscription(Imu, "/imu", self.callback_gyro, 10)
-        self.enco_sub = self.create_subscription(SensorState, "/sensor_state", self.callback_encoder, 10)
+        # Subscribers : capteurs bruts
+        self.create_subscription(Imu, "/imu", self.callback_gyro, 10)
+        self.create_subscription(SensorState, "/sensor_state", self.callback_encoder, 10)
 
-    def get_delta_t(self, stamp, timer_name):
-        """Calcule le temps écoulé entre deux messages pour l'intégration."""
-        now = stamp.sec + stamp.nanosec / 1e9
-        prev = getattr(self, timer_name) if hasattr(self, timer_name) else now
-        dt = now - prev
-        setattr(self, timer_name, now)
-        return dt
+    def callback_gyro(self, msg: Imu):
+        """Met a jour l'angle theta en integrant la vitesse angulaire du gyro.
 
-    def callback_gyro(self, msg):
-        """Mise à jour de l'angle theta par intégration de la vitesse angulaire."""
-        dt = self.get_delta_t(msg.header.stamp, "_t_gyro")
-        if dt < 0:  # le bag a rebouclé : on repart de zéro
+        Cette fonction est dediee uniquement a l'orientation. En isolant le calcul
+        de l'angle sur le gyroscope, on evite que les erreurs de glissement des roues
+        n'affectent la direction estimee du robot.
+        """
+        t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+
+        # Premier message : on memorise juste le temps
+        if self.t_gyro is None:
+            self.t_gyro = t
+            return
+
+        dt = t - self.t_gyro
+        self.t_gyro = t
+
+        # Rebouclage du bag (temps qui repart en arriere) : on repart de zero
+        if dt < 0:
             self.theta = 0.0
             return
-        if dt == 0:
-            return
-        vitesse_angulaire = msg.angular_velocity.z
-        self.theta += vitesse_angulaire * dt
 
-    def callback_encoder(self, msg):
-        """Calcul du déplacement linéaire et mise à jour de la position (X, Y)."""
-        dt = self.get_delta_t(msg.header.stamp, "_t_enco")
-
-        # Premier message OU rebouclage du bag (temps négatif) :
-        # on mémorise la baseline des encodeurs sans calculer de déplacement
-        if self.last_left_ticks is None or dt < 0:
-            self.last_left_ticks = msg.left_encoder
-            self.last_right_ticks = msg.right_encoder
-            if dt < 0:  # rebouclage : remise à zéro de la position
-                self.x = 0.0
-                self.y = 0.0
-            return
-        if dt == 0:
+        # On ignore les dt nuls ou aberrants (pause, saut > 1s)
+        if dt == 0.0 or dt > 1.0:
             return
 
-        # 1. Calcul de la distance parcourue par chaque roue (en ticks)
-        d_left = msg.left_encoder - self.last_left_ticks
-        d_right = msg.right_encoder - self.last_right_ticks
+        # Integration : theta += omega * dt
+        self.theta += msg.angular_velocity.z * dt
 
-        # Mise à jour de la mémoire pour le prochain calcul
-        self.last_left_ticks = msg.left_encoder
-        self.last_right_ticks = msg.right_encoder
+    def callback_encoder(self, msg: SensorState):
+        """Calcul du deplacement lineaire et mise a jour de la position (X, Y).
 
-        # 2. Conversion Ticks -> Vitesse linéaire (m/s)
-        # Formule : (ticks / résolution) * (périmètre de la roue) / dt
-        v_l = (d_left / self.TICKS_PER_REV) * (2 * np.pi * self.RAYON_ROUE / dt)
-        v_r = (d_right / self.TICKS_PER_REV) * (2 * np.pi * self.RAYON_ROUE / dt)
-        self.v_lineaire = (v_l + v_r) / 2.0
+        La distance de chaque roue se deduit du nombre de ticks via la resolution
+        de l'encodeur (4096 ticks/tour) et le perimetre de roue (rayon 0.033 m).
+        La distance du robot est la moyenne des deux roues. Ce deplacement est
+        ensuite projete sur les axes globaux a l'aide de l'angle issu du gyrometre :
+        x += d*cos(theta)  et  y += d*sin(theta).
+        """
+        t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
 
-        # 3. Projection sur les axes globaux X et Y
-        # On utilise l'angle theta qui vient d'être mis à jour par le Gyroscope
-        self.x += self.v_lineaire * np.cos(self.theta) * dt
-        self.y += self.v_lineaire * np.sin(self.theta) * dt
+        # Premier message : on memorise la baseline sans calculer de deplacement
+        if self.last_left is None:
+            self.last_left = msg.left_encoder
+            self.last_right = msg.right_encoder
+            self.t_enco = t
+            return
 
-        # 4. Envoi du message de pose
+        # Rebouclage du bag (temps qui repart en arriere) : remise a zero de la position
+        if t < self.t_enco:
+            self.last_left = msg.left_encoder
+            self.last_right = msg.right_encoder
+            self.t_enco = t
+            self.x = 0.0
+            self.y = 0.0
+            return
+
+        self.t_enco = t
+
+        # 1. Variation du nombre de ticks depuis le dernier message
+        d_left = msg.left_encoder - self.last_left
+        d_right = msg.right_encoder - self.last_right
+        self.last_left = msg.left_encoder
+        self.last_right = msg.right_encoder
+
+        # 2. Conversion ticks -> distance parcourue (m)
+        perimetre = 2 * np.pi * self.RAYON_ROUE
+        dist_left = (d_left / self.TICKS_PER_REV) * perimetre
+        dist_right = (d_right / self.TICKS_PER_REV) * perimetre
+
+        # Distance du robot = moyenne des deux roues
+        dist = (dist_left + dist_right) / 2.0
+
+        # 3. Projection sur les axes globaux avec l'angle du gyro
+        self.x += dist * np.cos(self.theta)
+        self.y += dist * np.sin(self.theta)
+
+        # 4. Publication de la pose
         self.publier_pose(msg.header.stamp)
 
-    def publier_pose(self, timestamp):
-        """Crée et publie le message PoseStamped."""
+    def publier_pose(self, stamp):
+        """Construit et publie le message PoseStamped.
+
+        L'angle theta est converti en quaternion (format 3D requis par ROS) via
+        euler2quat. La pose est publiee dans le repere fixe 'odom', ce qui permet
+        au noeud de cartographie de placer les points LiDAR correctement.
+        """
         msg = PoseStamped()
-        msg.header.stamp = timestamp
+        msg.header.stamp = stamp
         msg.header.frame_id = "odom"
-        
-        # Position
+
         msg.pose.position.x = self.x
         msg.pose.position.y = self.y
-        
-        # Conversion Euler -> Quaternion pour l'orientation
+
+        # Angle theta -> quaternion (format ROS)
         q = euler2quat(0, 0, self.theta)
-        msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z = q
-        
+        msg.pose.orientation.w = q[0]
+        msg.pose.orientation.x = q[1]
+        msg.pose.orientation.y = q[2]
+        msg.pose.orientation.z = q[3]
+
         self.pose_pub.publish(msg)
 
-def main():
-    rclpy.init()
-    node = OdomNode()
+
+def main(args=None):
+    rclpy.init(args=args)
     try:
-        rclpy.spin(node)
+        rclpy.spin(OdomNode())
     except KeyboardInterrupt:
         pass
-    rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
-    
-    
-    
-    
-#__init__ : Cette fonction prépare la structure de données du nœud. Elle définit les caractéristiques physiques du robot (comme le rayon de la roue de 0.033 m) et initialise la "pose" du robot (x,y et θ) à zéro. Elle établit également les communications ROS 2 en créant le publisher pour la pose finale et les deux abonnements (subscribers) pour recevoir les données de l'IMU et des encodeurs.
 
-#    get_delta_t : C'est une fonction utilitaire cruciale pour la précision. Elle calcule le temps exact (dt) écoulé entre la réception de deux messages successifs en utilisant les timestams du système. Sans ce calcul dynamique du temps, l'intégration des vitesses (angulaire et linéaire) serait imprécise.
 
- #   callback_gyro : Cette fonction est dédiée uniquement à l'orientation. Elle récupère la vitesse angulaire sur l'axe Z (le lacet) depuis l'IMU et l'intègre au fil du temps pour mettre à jour la variable theta. En isolant ainsi le calcul de l'angle sur le gyroscope, on évite que les erreurs de glissement des roues n'affectent la direction estimée du robot.
+"""
+DECLARATION D'UTILISATION DE L'IA
 
-#    callback_encoder : C'est ici que le déplacement est calculé. La fonction mesure d'abord la variation du nombre de "ticks" pour chaque roue, puis convertit cette différence en vitesse réelle (m/s) en utilisant la résolution de 4096 ticks et le périmètre de la roue. Une fois la vitesse linéaire obtenue, elle projette ce mouvement sur les axes X et Y de la carte globale en utilisant l'angle theta (mis à jour par le gyro). Cette méthode garantit que le robot "sait" dans quelle direction il avance.
+Pour l'odometrie, nous nous sommes appuyes sur les notions des TP, ne sollicitant
+l'IA que pour la syntaxe ROS 2 et la resolution de bugs techniques. La logique
+(decoupler le gyrometre pour l'angle et les encodeurs pour la distance) a ete
+decidee par nous-memes ; l'IA a contribue surtout a la mise en forme du code.
 
-#    publier_pose : Cette dernière étape formate les résultats pour les autres nœuds. Elle convertit l'angle de rotation (Euler) en un quaternion (format 3D requis par ROS) via la fonction euler2quat. Elle publie ensuite l'ensemble des données dans un message PoseStamped, rattaché au repère fixe odom, permettant au nœud de transformation LiDAR de placer ses points correctement dans le labyrinthe.
+L'IA nous a aides sur les points syntaxiques propres a rclpy : la structure du
+noeud avec ses deux abonnements (/imu et /sensor_state), la conversion de l'angle
+en quaternion via euler2quat, et la lecture du timestamp des messages pour calculer
+le pas de temps dt necessaire a l'integration du gyrometre.
+
+En revanche, nous avons corrige plusieurs choix de conception. La version initiale
+parlait de "fusion de capteurs" : nous avons identifie qu'il s'agissait en realite
+d'un decouplage et corrige la formulation. Nous avons egalement ecarte l'idee de
+moyenner l'angle du gyrometre et celui des encodeurs : moyenner une estimation
+fiable avec une estimation faussee par le patinage des roues aurait degrade le
+resultat.
+"""

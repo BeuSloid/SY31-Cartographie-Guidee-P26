@@ -150,3 +150,22 @@ def make_markers(
         markers.markers.append(marker)
 
     return markers
+
+"""Le module utils.py regroupe les outils partagés par l'ensemble des nœuds. 
+La fonction make_pointcloud2 assemble les tableaux de positions, d'intensités et d'identifiants 
+de cluster en un message PointCloud2 ; la coordonnée z est forcée à zéro puisque le robot évolue 
+en 2D, et les entrées sont converties en tableaux float32 afin d'accepter indifféremment des listes
+ Python ou des tableaux NumPy. La fonction declare_param permet de déclarer des paramètres ROS 
+ modifiables à chaud (via ros2 param set), ce qui nous a évité de relancer les nœuds à chaque 
+ ajustement de seuil lors des tests ; le callback de mise à jour n'est enregistré qu'une seule 
+ fois par nœud à l'aide d'un drapeau, pour éviter qu'il ne soit déclenché plusieurs fois lorsqu'un 
+ nœud déclare plusieurs paramètres. Enfin, make_markers génère les marqueurs RViz représentant les 
+ flèches détectées, chacune affichée sous forme de cylindre coloré à la position de son centroïde."""
+"""Sur ce module utilitaire, l'IA a surtout joué un rôle de relecture qualité. 
+Elle a repéré que notre fonction declare_param accédait à un attribut interne de ROS 
+(_on_set_parameters_callbacks) pour éviter d'enregistrer deux fois le callback de mise à jour 
+des paramètres, solution fragile et non documentée. Nous avons remplacé cette astuce par 
+un mécanisme explicite à base de drapeau (hasattr), que nous maîtrisons et pouvons justifier.
+ L'IA nous a également suggéré de convertir les entrées de make_pointcloud2 en float32 
+ via np.asarray pour accepter indifféremment listes et tableaux NumPy, ce qui a supprimé 
+ une source d'erreurs de type rencontrée entre nos différents nœuds."""

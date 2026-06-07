@@ -37,3 +37,21 @@ def main(args=None):
         rclpy.spin(IntensityFilter())
     except KeyboardInterrupt:
         pass
+
+"""Le nœud intensity_filter opère un seuillage sur l'intensité des points LiDAR. 
+Le capteur renvoie, pour chaque point, une mesure de l'intensité du retour laser, 
+plus élevée sur les surfaces réfléchissantes. En ne conservant que les points dont 
+l'intensité dépasse un seuil réglable, on peut isoler certaines surfaces et alléger 
+le nuage transmis à l'étape de clustering. Le seuil est exposé comme paramètre ROS 
+modifiable à chaud via notre utilitaire declare_param, ce qui nous a permis de l'ajuster 
+directement pendant la lecture des fichiers bag sans relancer la chaîne de nœuds. 
+Un garde-fou ignore les nuages vides afin d'éviter toute erreur d'indexation 
+lorsque aucun point n'est reçu.
+Ce nœud est l'un des plus directs de la chaîne et reprend l'ossature fournie en TP ; 
+le filtrage vectorisé par masque booléen NumPy relève des notions de manipulation de 
+tableaux vues en cours. L'IA n'a pas été nécessaire sur la logique. Lors de notre 
+relecture qualité, nous avons surtout veillé à la cohérence avec le reste du projet :
+ nous avons unifié la déclaration du paramètre de seuil pour qu'elle passe par notre 
+ utilitaire commun declare_param (réglage à chaud), plutôt que par une lecture unique 
+ au démarrage, et ramené la profondeur de file du publisher à une valeur raisonnable 
+ adaptée à un traitement scan par scan"""
