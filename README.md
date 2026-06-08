@@ -4,7 +4,7 @@ Ce projet s'inscrit dans le cadre de l'UV SY31 Capteurs pour les systèmes intel
 
 Le robot utilise une fusion d'informations provenant de ses capteurs proprioceptifs (encodeurs de roue et gyroscope) pour estimer sa position, et de son LiDAR pour générer une carte basée sur l'accumulation de points dans un repère fixe. En parallèle, une caméra embarquée permet de détecter des flèches colorées disposées dans le labyrinthe. Cette reconnaissance visuelle assiste l'opérateur dans ses choix directionnels pendant la commande.
 
-Le projet a été implémenté sous ROS2 (Robot Operating System 2) en Python, en s'appuyant sur une architecture modulaire distribuée en plusieurs nœuds spécialisés. Conformément aux consignes de l'enseignante, le LiDAR n'est pas utilisé pour l'estimation de la pose : nous avons calculé nous-mêmes l'odométrie à partir des capteurs proprioceptifs.
+Le projet a été implémenté sous ROS2 (Robot Operating System 2) en Python, en s'appuyant sur une architecture modulaire distribuée en plusieurs nœuds spécialisés. Nous avons calculé nous-mêmes l'odométrie à partir des capteurs proprioceptifs.
 
 ---
 Voici le contenu du package après avoir dézippé le projet :
