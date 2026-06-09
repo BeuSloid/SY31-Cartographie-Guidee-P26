@@ -1,6 +1,6 @@
 # SY31-Cartographie-Guidee-P26
 
-Ce projet s'inscrit dans le cadre de l'UV SY31 Capteurs pour les systèmes intelligents, et a pour objectif de mettre en œuvre une solution robotique combinant perception et localisation pour un robot mobile évoluant dans un labyrinthe. Le sujet traité est celui de la \textit{cartographie guidée} : un TurtleBot3 Burger est guidé manuellement à l'intérieur d'un labyrinthe à l'aide de commandes clavier, tout en construisant progressivement une carte de son environnement.
+Ce projet s'inscrit dans le cadre de l'UV SY31 Capteurs pour les systèmes intelligents, et a pour objectif de mettre en œuvre une solution robotique combinant perception et localisation pour un robot mobile évoluant dans un labyrinthe. Le sujet traité est celui de la cartographie guidée : un TurtleBot3 Burger est guidé manuellement à l'intérieur d'un labyrinthe à l'aide de commandes clavier, tout en construisant progressivement une carte de son environnement.
 
 Le robot utilise une fusion d'informations provenant de ses capteurs proprioceptifs (encodeurs de roue et gyroscope) pour estimer sa position, et de son LiDAR pour générer une carte basée sur l'accumulation de points dans un repère fixe. En parallèle, une caméra embarquée permet de détecter des flèches colorées disposées dans le labyrinthe. Cette reconnaissance visuelle assiste l'opérateur dans ses choix directionnels pendant la commande.
 
