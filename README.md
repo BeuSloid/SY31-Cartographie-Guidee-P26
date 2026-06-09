@@ -58,10 +58,8 @@ zenohd
 Dans un deuxième terminal, lancer le fichier bag du projet (nous avons également nos propres fichier bag, mais par soucis de simplicité nous prenons les fichiers bag fournis par Mr.Lima).
 
 ```bash
-ros2 bag play <chemin/vers/le/bag> --loop #par ex ici : ros2 bag play /projet/labyrinthe/ --loop
+ros2 bag play <chemin/vers/le/bag> --loop #par ex ici : ros2 bag play /projet/labyrinthe/
 ```
-
-L'option `--loop` rejoue le bag en boucle pour faciliter les tests.
 
 ### 3. Compiler le package
 Dans un nouveau terminal (dans le même dossier qu'on a dezippé):
