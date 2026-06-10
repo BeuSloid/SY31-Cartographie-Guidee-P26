@@ -1,110 +1,81 @@
 # SY31-Cartographie-Guidee-P26
 
-Projet ROS 2 de cartographie guidée d'un labyrinthe à l'aide d'un TurtleBot3.
-Le robot maintient une odométrie fusionnée (encodeurs + gyromètre) et accumule les
-points LiDAR dans un repère fixe pour construire une carte 2D. La caméra détecte des
-flèches de couleur indiquant au robot de tourner à gauche ou à droite ; ces flèches sont
-regroupées en clusters et affichées sur la carte.
+Ce projet s'inscrit dans le cadre de l'UV SY31 Capteurs pour les systèmes intelligents, et a pour objectif de mettre en œuvre une solution robotique combinant perception et localisation pour un robot mobile évoluant dans un labyrinthe. Le sujet traité est celui de la cartographie guidée : un TurtleBot3 Burger est guidé manuellement à l'intérieur d'un labyrinthe à l'aide de commandes clavier, tout en construisant progressivement une carte de son environnement.
+
+Le robot utilise une fusion d'informations provenant de ses capteurs proprioceptifs (encodeurs de roue et gyroscope) pour estimer sa position, et de son LiDAR pour générer une carte basée sur l'accumulation de points dans un repère fixe. En parallèle, une caméra embarquée permet de détecter des flèches colorées disposées dans le labyrinthe. Cette reconnaissance visuelle assiste l'opérateur dans ses choix directionnels pendant la commande.
+
+Le projet a été implémenté sous ROS2 (Robot Operating System 2) en Python, en s'appuyant sur une architecture modulaire distribuée en plusieurs nœuds spécialisés. Nous avons calculé nous-mêmes l'odométrie à partir des capteurs proprioceptifs.
 
 ---
-
+Voici le contenu du package après avoir dézippé le projet :
 ## Contenu du package
 
 ```
-projet/
-├── launch/
-│   └── labyrinthe.launch.xml   # Fichier de lancement principal
-├── projet/
-│   ├── odom_node.py            # Odométrie (encodeurs + gyromètre)
-│   ├── tf_publisher.py         # Publication TF dynamique odom → base_scan
-│   ├── transformer.py          # LaserScan → PointCloud2 (repère local)
-│   ├── intensity_filter.py     # Filtre d'intensité LiDAR
-│   ├── clusterer.py            # Clustering LiDAR (repère odom)
-│   ├── map_transformer.py      # Accumulation LiDAR en repère global (odom)
-│   ├── arrow_detector.py       # Détection flèches rouges/bleues (caméra)
-│   ├── arrow_clusterer.py      # Clustering incrémental des flèches détectées
-│   └── utils.py                # Fonctions partagées (PointCloud2, Markers, params)
-├── rviz/
-│   └── projet.rviz             # Configuration RViz2 prête à l'emploi
-└── README.md
+[dossier] projet/
+    [dossier] launch/
+        [fichier] labyrinthe.launch.xml   # Fichier de lancement principal
+    [dossier] projet/
+        [fichier] odom_node.py            # Odométrie (encodeurs + gyromètre)
+        [fichier] tf_publisher.py         # Publication TF dynamique odom → base_scan
+        [fichier] transformer.py          # LaserScan → PointCloud2 (repère local)
+        [fichier] intensity_filter.py     # Filtre d'intensité LiDAR
+        [fichier] clusterer.py            # Clustering LiDAR (repère odom)
+        [fichier] map_transformer.py      # Accumulation LiDAR en repère global (odom)
+        [fichier] arrow_detector.py       # Détection flèches rouges/bleues (caméra)
+        [fichier] arrow_clusterer.py      # Clustering incrémental des flèches détectées
+        [fichier] utils.py                # Fonctions partagées (PointCloud2, Markers, params)
+        [fichier] README.md
+        [dossier] labyrinthe/
+            [fichier] labyrinthe_0.mcap   # Fichier bag fourni par Mr.Lima
+    [dossier] rviz/
+        [fichier] projet.rviz             # Configuration RViz2 prête à l'emploi
+    [dossier] ressource/
+    [dossier] test/
+    [fichier] setup.py
+    [fichier] package.xml
 ```
 
----
-
-## Dépendances
-
-| Paquet | Usage |
-|---|---|
-| `rclpy` | Framework ROS 2 Python |
-| `opencv-python` (`cv2`) | Traitement d'image pour la détection de flèches |
-| `cv_bridge` | Conversion messages ROS ↔ images OpenCV |
-| `numpy` | Calculs numériques |
-| `transforms3d` | Conversion quaternion ↔ angles d'Euler |
-| `sensor_msgs_py` | Lecture/écriture de PointCloud2 en numpy |
-| `turtlebot3_msgs` | Lecture des encodeurs (`SensorState`) |
-| `image_transport` | Décompression du flux caméra compressé |
 
 ---
 
 ## Architecture des nœuds
 
 ```
-/imu            ──┐
-                  ├──► odom_node ──► /robot_pose ──► tf_publisher (TF odom→base_scan)
-/sensor_state   ──┘                      │
-                                         │
-/scan ──► transformer ──► intensity_filter ──► clusterer ──► /clusters
-/scan ──────────────────────────────────────────────────────► /global_points
-                                    (map_transformer, utilise /robot_pose)
-
-/turtlecam/image_raw/compressed ──► [decompresseur] ──► /turtlecam/image_raw
-                                                              │
-                                                    arrow_detector ──► /arrow_red
-                                                         │         ──► /arrow_blue
-                                                         └──► /detection_fleche
-                                                    arrow_clusterer ──► /arrow_clusters
+mettre photo
 ```
-
-**Topics publiés utiles dans RViz2 :**
-
-| Topic | Type | Description |
-|---|---|---|
-| `/global_points` | `PointCloud2` | Carte LiDAR accumulée (repère `odom`) |
-| `/clusters` | `PointCloud2` | Objets détectés, colorés par cluster (repère `odom`) |
-| `/arrow_clusters` | `MarkerArray` | Position des flèches sur la carte (repère `odom`) |
-| `/robot_pose` | `PoseStamped` | Position estimée du robot |
-| `/arrow_detections/image` | `Image` | Flux caméra annoté (debug) |
-| `/detection_fleche` | `String` | Direction courante : `"rouge"` ou `"bleue"` |
 
 ---
 
 ## Instructions de lancement
 
-### 1. Compiler le package
+### 1. Zenohd
+Lancer dans le premier terminal:
+```bash
+zenohd
+```
+
+### 2. Jouer le fichier bag
+Dans un deuxième terminal, lancer le fichier bag du projet (nous avons également nos propres fichier bag, mais par soucis de simplicité nous prenons les fichiers bag fournis par Mr.Lima).
 
 ```bash
-cd ~/SY31/sy31_ws
-colcon build --packages-select projet
+ros2 bag play <chemin/vers/le/bag> --loop #par ex ici : ros2 bag play /projet/labyrinthe/
+```
+
+### 3. Compiler le package
+Dans un nouveau terminal (dans le même dossier qu'on a dezippé):
+```bash
+colcon build --packages-select projet # ou: colcon build
 source install/setup.bash
 ```
 
-### 2. Lancer les nœuds
-
+### 4. Lancer les nœuds
+Dans le même terminal:
 ```bash
-ros2 launch projet labyrinthe.launch.xml
+ros2 launch projet labyrinthe.launch.xml # pour lancer : ros2 launch (nom du package) (nom du fichier launch)
 ```
 
-### 3. Rejouer le fichier bag
 
-Dans un autre terminal (sourcer l'environnement au préalable) :
-
-```bash
-ros2 bag play <chemin/vers/le/bag> --loop
-```
-
-L'option `--loop` rejoue le bag en boucle pour faciliter les tests.
-
-### 4. Ouvrir RViz2
+### 5. Ouvrir RViz2
 
 ```bash
 rviz2 -d install/projet/share/projet/rviz/projet.rviz
@@ -119,30 +90,9 @@ La configuration RViz2 fournie affiche automatiquement `global_points`, `cluster
 
 ---
 
-## Réglage des paramètres à chaud
-
-Les paramètres des nœuds sont modifiables sans relancement via `ros2 param set` :
-
+### 6. Ouvrir rqt
+Dans un nouveau terminal:
 ```bash
-# Distance max entre 2 points LiDAR pour appartenir au même cluster (défaut : 0.1 m)
-ros2 param set /clusterer distMax2Pts 0.15
-
-# Nombre minimum de détections pour valider une flèche (défaut : 3)
-ros2 param set /arrow_clusterer min_detections 5
-
-# Seuil d'intensité LiDAR (défaut : 20.0)
-ros2 param set /intensity_filter intensity_threshold 25.0
+rqt
 ```
-
 ---
-
-## Utilisation des LLM
-
-L'assistant Claude Code (Anthropic) a été utilisé pour :
-- Corriger deux bugs d'odométrie dans `odom_node.py` (initialisation des encodeurs et
-  réinitialisation lors du rebouclage du bag)
-- Corriger le décalage entre `clusters` et `global_points` dans RViz2 en ajoutant la
-  transformation `base_scan → odom` directement dans `clusterer.py`
-- Rédiger ce README
-
-Toutes les modifications ont été relues et comprises par les membres du binôme.
