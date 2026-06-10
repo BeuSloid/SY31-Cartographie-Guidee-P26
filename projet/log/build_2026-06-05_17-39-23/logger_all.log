@@ -1,0 +1,90 @@
+[0.118s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.118s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=4, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x78afc599e1e0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x78afc599dcd0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x78afc599dcd0>>, mixin_verb=('build',))
+[0.159s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.159s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.159s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.159s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.160s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.160s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.160s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet'
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.160s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.191s] DEBUG:colcon.colcon_core.package_identification:Package '.' with type 'ros.ament_python' and name 'projet'
+[0.192s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.192s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.192s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.192s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.192s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.212s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.212s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.214s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 1 installed packages in /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install
+[0.216s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 344 installed packages in /opt/ros/jazzy
+[0.218s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_args' from command line to 'None'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_target' from command line to 'None'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_clean_cache' from command line to 'False'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_clean_first' from command line to 'False'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'cmake_force_configure' from command line to 'False'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'ament_cmake_args' from command line to 'None'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'catkin_cmake_args' from command line to 'None'
+[0.266s] Level 5:colcon.colcon_core.verb:set package 'projet' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.266s] DEBUG:colcon.colcon_core.verb:Building package 'projet' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet', 'merge_install': False, 'path': '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet', 'symlink_install': False, 'test_result_base': None}
+[0.266s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.267s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.268s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet' with build type 'ament_python'
+[0.268s] Level 1:colcon.colcon_core.shell:create_environment_hook('projet', 'ament_prefix_path')
+[0.271s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.272s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/ament_prefix_path.ps1'
+[0.273s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/ament_prefix_path.dsv'
+[0.274s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/ament_prefix_path.sh'
+[0.275s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.276s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.563s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet'
+[0.564s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.564s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.316s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/projet build --build-base /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/build install --record /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/install.log --single-version-externally-managed install_data
+[2.000s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/projet build --build-base /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/build install --record /home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/build/projet/install.log --single-version-externally-managed install_data
+[2.003s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet' for CMake module files
+[2.004s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet' for CMake config files
+[2.004s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib'
+[2.005s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/bin'
+[2.005s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/pkgconfig/projet.pc'
+[2.005s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/lib/python3.12/site-packages'
+[2.005s] Level 1:colcon.colcon_core.shell:create_environment_hook('projet', 'pythonpath')
+[2.005s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/pythonpath.ps1'
+[2.006s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/pythonpath.dsv'
+[2.007s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/hook/pythonpath.sh'
+[2.007s] Level 1:colcon.colcon_core.environment:checking '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/bin'
+[2.008s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(projet)
+[2.008s] INFO:colcon.colcon_core.shell:Creating package script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/package.ps1'
+[2.009s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/package.dsv'
+[2.009s] INFO:colcon.colcon_core.shell:Creating package script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/package.sh'
+[2.010s] INFO:colcon.colcon_core.shell:Creating package script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/package.bash'
+[2.011s] INFO:colcon.colcon_core.shell:Creating package script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/projet/package.zsh'
+[2.012s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/projet/share/colcon-core/packages/projet)
+[2.012s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.013s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.013s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.013s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.022s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.022s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.022s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.037s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.037s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/local_setup.ps1'
+[2.039s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/_local_setup_util_ps1.py'
+[2.041s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/setup.ps1'
+[2.044s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/local_setup.sh'
+[2.045s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/_local_setup_util_sh.py'
+[2.046s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/setup.sh'
+[2.047s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/local_setup.bash'
+[2.047s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/setup.bash'
+[2.049s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/local_setup.zsh'
+[2.049s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/chttioui/sy31_ws/src/SY31-Cartographie-Guidee-P26/projet/install/setup.zsh'
