@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 from rclpy.node import Node
-from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CompressedImage, LaserScan
 from std_msgs.msg import String
 from geometry_msgs.msg import PointStamped, PoseStamped
 from transforms3d.euler import quat2euler
@@ -38,7 +38,7 @@ class ArrowDetector(Node):
 
     # Filtres de validation
     AREA_SEUIL = 6000           # aire min (px) pour valider une fleche
-    CENTER_RADIUS_SEUIL = 150   # px, distance max au centre de l'image
+    CENTER_RADIUS_SEUIL = 250   # px, distance max au centre de l'image
     ARROW_FORWARD_OFFSET = 0.5  # distance estimee robot -> fleche (m)
 
     def __init__(self):
@@ -53,6 +53,9 @@ class ArrowDetector(Node):
         self.robot_theta = 0.0
         self.has_odom = False
 
+        # Distance au mur droit devant (mise a jour par le scan LiDAR)
+        self.front_dist = None
+
         # Centre de l'image (calcule au premier message)
         self.camera_center = None
 
@@ -66,6 +69,9 @@ class ArrowDetector(Node):
         )
         self.sub_odom = self.create_subscription(
             PoseStamped, "/robot_pose", self.callback_odom, 10
+        )
+        self.sub_scan = self.create_subscription(
+            LaserScan, "scan", self.callback_scan, 10
         )
 
         # Publishers
@@ -82,6 +88,16 @@ class ArrowDetector(Node):
         q = msg.pose.orientation
         _, _, self.robot_theta = quat2euler([q.w, q.x, q.y, q.z])
         self.has_odom = True
+
+    def callback_scan(self, msg: LaserScan):
+        """Distance au mur droit devant : mediane des rayons a +/- 5 deg de l'avant."""
+        ranges = np.array(msg.ranges)
+        n = len(ranges)
+        angles = msg.angle_min + np.arange(n) * msg.angle_increment
+        avant = np.abs(np.arctan2(np.sin(angles), np.cos(angles))) < np.radians(5)
+        front = ranges[avant]
+        front = front[np.isfinite(front) & (front > 0.1)]
+        self.front_dist = float(np.median(front)) if len(front) else None
 
     def callback_img(self, msg: CompressedImage):
         try:
@@ -168,11 +184,13 @@ class ArrowDetector(Node):
 
         if not self.has_odom:
             return
+        dist = self.front_dist if self.front_dist is not None else 0.4
+        dist = min(dist, 2.0)  # garde-fou : une fleche validee est forcement proche
         point = PointStamped()
         point.header.stamp = stamp
         point.header.frame_id = "odom"
-        point.point.x = self.robot_x + self.ARROW_FORWARD_OFFSET * np.cos(self.robot_theta)
-        point.point.y = self.robot_y + self.ARROW_FORWARD_OFFSET * np.sin(self.robot_theta)
+        point.point.x = self.robot_x + dist * np.cos(self.robot_theta)
+        point.point.y = self.robot_y + dist * np.sin(self.robot_theta)
         publisher.publish(point)
 
     def draw_largest_contour(self, img, mask, color):

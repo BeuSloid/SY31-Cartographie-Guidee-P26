@@ -5,6 +5,7 @@ import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
 from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Point
 
 from .utils import declare_param
 
@@ -27,9 +28,6 @@ class ArrowClusterer(Node):
         self.clusters_red = []
         self.clusters_blue = []
 
-        # Detection du rebouclage du bag
-        self._last_stamp = None
-
         # Subscribers
         self.sub_red = self.create_subscription(
             PointStamped, "arrow_red", self.cb_red, 10
@@ -51,12 +49,6 @@ class ArrowClusterer(Node):
         self._add(msg, self.clusters_blue)
 
     def _add(self, msg, clusters):
-        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
-        if self._last_stamp is not None and stamp < self._last_stamp:
-            self.clusters_red.clear()
-            self.clusters_blue.clear()
-        self._last_stamp = stamp
-
         pt = np.array([msg.point.x, msg.point.y])
 
         # Recherche du cluster existant le plus proche
@@ -80,29 +72,27 @@ class ArrowClusterer(Node):
         ma.markers.append(Marker(action=Marker.DELETEALL))
 
         mid = 0
-        for clusters, ns,color in [
-            (self.clusters_red,"rouge", (1.0, 0.0, 0.0)),
-            (self.clusters_blue, "bleu",(0.0, 0.0, 1.0)),
+        for clusters, ns, color in [
+            (self.clusters_red, "arrow_red", (1.0, 0.0, 0.0)),
+            (self.clusters_blue, "arrow_blue", (0.0, 0.0, 1.0)),
         ]:
+            m = Marker()
+            m.header.frame_id = "odom"
+            m.header.stamp = self.get_clock().now().to_msg()
+            m.ns = ns
+            m.id = mid
+            mid += 1
+            m.type = Marker.POINTS
+            m.action = Marker.ADD
+            m.scale.x = m.scale.y = 0.04   # taille des points en m
+            m.color.r, m.color.g, m.color.b = color
+            m.color.a = 1.0
             for c in clusters:
-                # On ignore les clusters trop peu vus (faux positifs)
                 if c["count"] < self.min_detections:
                     continue
-                m = Marker()
-                m.header.frame_id = "odom"
-                m.header.stamp = self.get_clock().now().to_msg()
-                m.ns = ns
-                m.id = mid
-                mid += 1
-                m.type = Marker.SPHERE
-                m.action = Marker.ADD
-                m.pose.position.x = float(c["centroid"][0])
-                m.pose.position.y = float(c["centroid"][1])
-                m.pose.position.z = 0.2
-                m.scale.x = m.scale.y = m.scale.z = 0.2
-                m.color.r, m.color.g, m.color.b = color
-                m.color.a = 0.9
-                ma.markers.append(m)
+                m.points.append(Point(x=float(c["centroid"][0]),
+                                    y=float(c["centroid"][1]), z=0.05))
+            ma.markers.append(m)
 
         self.pub.publish(ma)
 

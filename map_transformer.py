@@ -28,11 +28,15 @@ class MapTransformer(Node):
         self.dist_min = 0.10
         self.dist_max = 3.5
 
-        # Carte accumulee
-        self.acc_x = []
-        self.acc_y = []
-        self.acc_i = []
-        self._last_stamp = None
+        # Voxel grid : resolutions et seuil de qualite
+        # Chaque cellule (ix, iy) accumule les points qui tombent dedans.
+        # On ne publie une cellule que si elle a ete touchee >= MIN_HITS fois,
+        # ce qui elimine le bruit et les points aberrants isoles.
+        self.GRID_RES = 0.05   # taille d'une cellule (m)
+        self.MIN_HITS = 2      # passages minimum pour valider un point
+
+        # Carte accumulee : dict (ix, iy) -> [sum_x, sum_y, sum_i, count]
+        self.grid = {}
 
         # On republie toute la carte une fois par seconde
         self.create_timer(1.0, self.publish_map)
@@ -72,26 +76,30 @@ class MapTransformer(Node):
 
         intens = np.array(msg.intensities)[ok] if len(msg.intensities) == n else np.zeros(len(ranges))
 
-        # 5. Reset de la carte si le bag a reboucle (temps qui repart en arriere)
-        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
-        if self._last_stamp is not None and stamp < self._last_stamp:
-            self.acc_x.clear()
-            self.acc_y.clear()
-            self.acc_i.clear()
-        self._last_stamp = stamp
-
-        # 6. Accumulation
-        self.acc_x.extend(x_global[::2])
-        self.acc_y.extend(y_global[::2])
-        self.acc_i.extend(intens[::2])
+        # 5. Accumulation dans la grille voxel
+        ix = np.floor(x_global / self.GRID_RES).astype(int)
+        iy = np.floor(y_global / self.GRID_RES).astype(int)
+        for k, xg, yg, ig in zip(zip(ix, iy), x_global, y_global, intens):
+            if k in self.grid:
+                self.grid[k][0] += xg
+                self.grid[k][1] += yg
+                self.grid[k][2] += ig
+                self.grid[k][3] += 1
+            else:
+                self.grid[k] = [xg, yg, ig, 1]
 
     def publish_map(self):
-        if not self.acc_x:
+        # On ne publie que les cellules ayant ete touchees >= MIN_HITS fois
+        cells = [v for v in self.grid.values() if v[3] >= self.MIN_HITS]
+        if not cells:
             return
+        xs = [v[0] / v[3] for v in cells]
+        ys = [v[1] / v[3] for v in cells]
+        ins = [v[2] / v[3] for v in cells]
         header = Header()
         header.frame_id = "odom"
         header.stamp = self.get_clock().now().to_msg()
-        self.pub.publish(make_pointcloud2(header, self.acc_x, self.acc_y, self.acc_i))
+        self.pub.publish(make_pointcloud2(header, xs, ys, ins))
 
 
 def main(args=None):

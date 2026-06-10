@@ -31,9 +31,8 @@ class OdomNode(Node):
         self.y = 0.0
         self.theta = 0.0
 
-        # Horodatages du dernier message recu (pour calculer dt et detecter le rebouclage)
+        # Horodatage du dernier message IMU (pour calculer dt)
         self.t_gyro = None
-        self.t_enco = None
 
         # Position precedente des encodeurs (en ticks)
         # None = pas encore recu de message ; evite le faux saut au premier message
@@ -64,11 +63,6 @@ class OdomNode(Node):
         dt = t - self.t_gyro
         self.t_gyro = t
 
-        # Rebouclage du bag (temps qui repart en arriere) : on repart de zero
-        if dt < 0:
-            self.theta = 0.0
-            return
-
         # On ignore les dt nuls ou aberrants (pause, saut > 1s)
         if dt == 0.0 or dt > 1.0:
             return
@@ -85,25 +79,11 @@ class OdomNode(Node):
         ensuite projete sur les axes globaux a l'aide de l'angle issu du gyrometre :
         x += d*cos(theta)  et  y += d*sin(theta).
         """
-        t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-
         # Premier message : on memorise la baseline sans calculer de deplacement
         if self.last_left is None:
             self.last_left = msg.left_encoder
             self.last_right = msg.right_encoder
-            self.t_enco = t
             return
-
-        # Rebouclage du bag (temps qui repart en arriere) : remise a zero de la position
-        if t < self.t_enco:
-            self.last_left = msg.left_encoder
-            self.last_right = msg.right_encoder
-            self.t_enco = t
-            self.x = 0.0
-            self.y = 0.0
-            return
-
-        self.t_enco = t
 
         # 1. Variation du nombre de ticks depuis le dernier message
         d_left = msg.left_encoder - self.last_left
