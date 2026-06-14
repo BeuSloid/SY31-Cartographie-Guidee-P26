@@ -13,26 +13,27 @@ Voici le contenu du package après avoir dézippé le projet :
 ```
 [dossier] projet/
     [dossier] launch/
-        [fichier] labyrinthe.launch.xml   # Fichier de lancement principal
+        [fichier] labyrinthe.launch.xml
     [dossier] projet/
-        [fichier] odom_node.py            # Odométrie (encodeurs + gyromètre)
-        [fichier] tf_publisher.py         # Publication TF dynamique odom → base_scan
-        [fichier] transformer.py          # LaserScan → PointCloud2 (repère local)
-        [fichier] intensity_filter.py     # Filtre d'intensité LiDAR
-        [fichier] clusterer.py            # Clustering LiDAR (repère odom)
-        [fichier] map_transformer.py      # Accumulation LiDAR en repère global (odom)
-        [fichier] arrow_detector.py       # Détection flèches rouges/bleues (caméra)
-        [fichier] arrow_clusterer.py      # Clustering incrémental des flèches détectées
-        [fichier] utils.py                # Fonctions partagées (PointCloud2, Markers, params)
-        [fichier] README.md
+        [fichier] odom_node.py 
+        [fichier] tf_publisher.py
+        [fichier] transformer.py
+        [fichier] intensity_filter.py
+        [fichier] clusterer.py
+        [fichier] map_transformer.py
+        [fichier] arrow_detector.py 
+        [fichier] arrow_clusterer.py 
+        [fichier] utils.py 
         [dossier] labyrinthe/
-            [fichier] labyrinthe_0.mcap   # Fichier bag fourni par Mr.Lima
+            [fichier] labyrinthe_0.mcap 
     [dossier] rviz/
-        [fichier] projet.rviz             # Configuration RViz2 prête à l'emploi
+        [fichier] projet.rviz
     [dossier] ressource/
     [dossier] test/
     [fichier] setup.py
     [fichier] package.xml
+    [fichier] README.md
+
 ```
 
 
