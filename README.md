@@ -41,7 +41,7 @@ Voici le contenu du package après avoir dézippé le projet :
 ## Architecture des nœuds
 
 ```
-![Architecture du projet](docs/architecture.png)
+![Architecture du projet](image/architecture.png)
 ```
 
 ---
