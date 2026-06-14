@@ -1,0 +1,10 @@
+<launch>
+<node pkg="projet" exec="odom_node" name="odom_node" output="screen"/>
+    <node pkg="projet" exec="tf_publisher" name="tf_publisher" output="screen"/>
+    <node pkg="projet" exec="trans" name="transformer" output="screen"/>
+    <node pkg="projet" exec="inten" name="intensity_filter" output="screen"/>
+    <node pkg="projet" exec="cluster" name="clusterer" output="screen"/>
+    <node pkg="projet" exec="map_transformer" name="map_transformer" output="screen"/>
+    <node pkg="projet" exec="arrow_detector" name="arrow_detector" output="screen"/>
+    <node pkg="projet" exec="arrow_clusterer" name="arrow_clusterer" output="screen"/>
+</launch>
