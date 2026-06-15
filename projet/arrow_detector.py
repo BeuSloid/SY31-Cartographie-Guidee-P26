@@ -35,7 +35,6 @@ class ArrowDetector(Node):
     # filtres de validation
     AREA_SEUIL = 6000 # aire min (px) pour valider une fleche
     CENTER_RADIUS_SEUIL = 250 # px, distance max au centre de l'image
-    ARROW_FORWARD_OFFSET = 0.5 # distance estimee robot -> fleche (m)
 
     def __init__(self):
         super().__init__("arrow_detector")
