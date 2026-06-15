@@ -7,4 +7,6 @@
     <node pkg="projet" exec="map_transformer" name="map_transformer" output="screen"/>
     <node pkg="projet" exec="arrow_detector" name="arrow_detector" output="screen"/>
     <node pkg="projet" exec="arrow_clusterer" name="arrow_clusterer" output="screen"/>
+    <node pkg="rviz2" exec="rviz2" name="rviz2"
+          args="-d $(find-pkg-share projet)/rviz/projet.rviz"/>
 </launch>

@@ -29,8 +29,13 @@ Voici le contenu du package après avoir dézippé le projet :
     [dossier] rviz/
         [fichier] projet.rviz
     [dossier] ressource/
+        [fichier] 1 fichier apparu avec le package
     [dossier] test/
+        [3 fichiers] apparu avec le package
+    [dosssier] image/
+        [fichier] architecture.png
     [fichier] setup.py
+    [fichier] setup.cfg
     [fichier] package.xml
     [fichier] README.md
 
@@ -57,7 +62,7 @@ zenohd
 Dans un deuxième terminal, lancer le fichier bag du projet (nous avons également nos propres fichier bag, mais par soucis de simplicité nous prenons les fichiers bag fournis par Mr.Lima).
 
 ```bash
-ros2 bag play <chemin/vers/le/bag> --loop #par ex ici : ros2 bag play /projet/labyrinthe/
+ros2 bag play <chemin/vers/le/bag> #par ex ici : ros2 bag play /projet/labyrinthe/
 ```
 
 ### 3. Compiler le package
@@ -75,16 +80,19 @@ ros2 launch projet labyrinthe.launch.xml # pour lancer : ros2 launch (nom du pac
 
 
 ### 5. Ouvrir RViz2
+Dans le fichier launch nous avons mis une configuration de Rviz2 directement, comme ça nos paramètres ont
+été sauvegardé pour que cela soit plus simple à lancer lors de la présentation.
 
+Si vous voulez ouvrir un autre Rviz2 il suffit de faire dans un nouveau terminal:
 ```bash
-rviz2 -d install/projet/share/projet/rviz/projet.rviz
+Rviz2
 ```
 
 La configuration RViz2 fournie affiche automatiquement `global_points`, `clusters` et
 `arrow_clusters` avec le repère fixe `odom`.
 
 > **Note :** Ne pas utiliser `base_scan` comme Fixed Frame dans RViz2. Notre
-> `tf_publisher` publie la TF `odom → base_scan` dynamiquement, ce qui permet
+> `tf_publisher` publie la TF `odom => base_scan` dynamiquement, ce qui permet
 > d'utiliser `odom` et d'obtenir une carte globale stable.
 
 ---
@@ -94,4 +102,7 @@ Dans un nouveau terminal:
 ```bash
 rqt
 ```
+> Pour bien visualiser il faut aller dans plugins => visualization => plot view
+> Puis séléctionner /arrow_detections/compressed pour visualiser les flcèhes avec les commandes pour l'opérateur.
+> Sinon séléctionné les autres topics pour voir nos masques appliqués aux flèches.
 ---
